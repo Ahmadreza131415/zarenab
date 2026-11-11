@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>زرناب | قیمت لحظه‌ای طلا و سکه</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Vazirmatn', Tahoma, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #ffffff; color: #333; -webkit-user-select: none; user-select: none; }
+
+        .header { border-bottom: 1px solid #eee; padding: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .logo-box { color: #1a73e8; font-size: 20px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .search-box { background: #f1f3f4; border-radius: 20px; padding: 8px 15px; display: flex; align-items: center; width: 60%; }
+        .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 14px; }
+
+        .page-title { padding: 20px 15px 10px; font-size: 18px; font-weight: bold; color: #202124; }
+        .page-subtitle { padding: 0 15px 20px; font-size: 13px; color: #70757a; }
+
+        .price-list { padding: 0 15px 100px; }
+        .price-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
+        .item-name { font-size: 15px; color: #202124; font-weight: 500; }
+        .item-price { font-size: 16px; font-weight: bold; color: #202124; display: flex; align-items: center; gap: 5px; }
+        .item-price span { font-size: 12px; color: #70757a; font-weight: normal; }
+        
+        .item-price a { color: #1a73e8; text-decoration: none; font-size: 12px; border: 1px solid #1a73e8; padding: 2px 6px; border-radius: 5px; }
+
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #eee; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+        .nav-item { text-align: center; font-size: 12px; color: #70757a; cursor: pointer; }
+        .nav-item.active { color: #1a73e8; }
+    </style>
+</head>
+<body>
+
+    <div id="page-home" class="page-section active">
+        <div class="header">
+            <a href="/" class="logo-box">زرناب</a>
+            <div class="search-box">
+                <input type="text" placeholder="قیمت طلا ..." readonly>
+                <span style="margin-right: 5px;">🔍</span>
+            </div>
+        </div>
+
+        <div class="page-title">قیمت لحظه‌ای طلا، سکه، دلار و ارز</div>
+        <div class="page-subtitle">برای مشاهده قیمت دقیق، روی لینک هر مورد کلیک کنید.</div>
+
+        <div class="price-list">
+            {% for item in prices %}
+            <div class="price-item">
+                <div class="item-name">{{ item.name }}</div>
+                <div class="item-price">
+                    {% if item.price > 0 %}
+                        {{ "{:,}".format(item.price) }} <span>تومان</span>
+                    {% else %}
+                        ناموجود
+                    {% endif %}
+                    <a href="{{ item.link }}" target="_blank">مشاهده</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="page-search" class="page-section" style="padding: 20px;">
+        <h2>جستجو در زرناب</h2>
+        <p style="color: #777; margin-top: 10px;">این بخش در حال ساخت است.</p>
+    </div>
+    <div id="page-notifications" class="page-section" style="padding: 20px;">
+        <h2>اعلان‌ها</h2>
+        <p style="color: #777; margin-top: 10px;">اعلان جدیدی وجود ندارد.</p>
+    </div>
+    <div id="page-activity" class="page-section" style="padding: 20px;">
+        <h2>فعالیت‌ها</h2>
+        <p style="color: #777; margin-top: 10px;">فعالیتی ثبت نشده است.</p>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="showPage('home', this)">🏠<br>صفحه اصلی</div>
+        <div class="nav-item" onclick="showPage('search', this)">🔍<br>جستجو</div>
+        <div class="nav-item" onclick="showPage('notifications', this)">🔔<br>اعلان‌ها</div>
+        <div class="nav-item" onclick="showPage('activity', this)">📊<br>فعالیت</div>
+    </div>
+
+    <script>
+        function showPage(pageId, element) {
+            document.querySelectorAll('.page-section').forEach(function(section) {
+                section.classList.remove('active');
+            });
+            document.getElementById('page-' + pageId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(function(nav) {
+                nav.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+    </script>
+</body>
+</html>
