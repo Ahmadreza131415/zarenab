@@ -1,43 +1,45 @@
 from flask import Flask, render_template
-import asyncio
+import requests
 import os
 
 app = Flask(__name__)
 
-# تابع برای دریافت قیمت‌های واقعی از TGJU
-async def get_real_prices():
-    from tgju import TgjuClient, MarketItem
-    
-    client = TgjuClient()
-    prices = []
-    
-    items = [
-        (MarketItem.PriceDollarRl, "دلار آمریکا"),
-        (MarketItem.Geram18, "طلای ۱۸ عیار (گرم)"),
-        (MarketItem.Sekee, "سکه امامی"),
-        (MarketItem.Sekeb, "سکه بهار آزادی"),
-        (MarketItem.Nim, "نیم سکه"),
-        (MarketItem.Rob, "ربع سکه"),
-        (MarketItem.Gerami, "سکه گرمی"),
-    ]
-    
-    for item, name in items:
-        try:
-            price = await client.get_price(item)
-            prices.append({"name": name, "price": price // 10})
-        except Exception:
-            prices.append({"name": name, "price": 0})
-            
-    return prices
-
 @app.route('/')
 def home():
+    prices = []
     try:
-        prices = asyncio.run(get_real_prices())
-        if not prices or all(p['price'] == 0 for p in prices):
-            raise Exception("No data")
+        # دریافت قیمت‌ها از وب‌سرویس ۲۴طلا
+        url = "https://24tala.ir/api/v1/prices"
+        response = requests.get(url, timeout=10)
+        data = response.json()
+
+        if data.get("ok"):
+            # استخراج قیمت‌ها از ساختار JSON این سرویس
+            # (ساختار ممکنه کمی متفاوت باشه، این کد بر اساس مستنداتش تنظیم شده)
+            items = data.get("data", {}).get("items", [])
+            
+            # اگر ساختار فرق داشت، از دیکشنری مستقیم استفاده می‌کنیم
+            gold_data = data.get("data", {})
+            
+            prices = [
+                {"name": "طلای ۱۸ عیار (گرم)", "price": gold_data.get("gold", {}).get("current", 0), "link": "https://24tala.ir/"},
+                {"name": "دلار آمریکا", "price": next((i.get("sell") for i in items if i.get("code") == "USD"), 0), "link": "https://24tala.ir/"},
+                {"name": "سکه امامی", "price": next((i.get("price") for i in items if i.get("code") == "seke_emami"), 0), "link": "https://24tala.ir/"},
+                {"name": "نیم سکه", "price": next((i.get("price") for i in items if i.get("code") == "seke_nim"), 0), "link": "https://24tala.ir/"},
+                {"name": "ربع سکه", "price": next((i.get("price") for i in items if i.get("code") == "seke_rob"), 0), "link": "https://24tala.ir/"},
+            ]
+            
+            # فیلتر کردن مواردی که قیمت صفر دارن
+            prices = [p for p in prices if p["price"] and p["price"] > 0]
+            
+            if not prices:
+                raise Exception("No valid prices found")
+        else:
+            raise Exception("API returned not ok")
+
     except Exception as e:
-        prices = [{"name": "خطا در دریافت قیمت", "price": 0}]
+        # در صورت خطا، پیام نمایش داده می‌شود
+        prices = [{"name": "خطا در دریافت قیمت (لطفاً بعداً تلاش کنید)", "price": 0, "link": "#"}]
 
     return render_template('index.html', prices=prices)
 
